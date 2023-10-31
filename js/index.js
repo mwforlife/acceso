@@ -2,30 +2,70 @@ $(document).ready(function () {
   $("#formlogin").on("submit", function (e) {
     e.preventDefault();
     var rut = $("#rut").val();
+    // Obtén todas las cookies como una cadena
+    var cookies = document.cookie;
+
+    // Divide la cadena de cookies en un array
+    var cookieArray = cookies.split("; ");
+
+    // Busca la cookie "tabletId" en el array
+    var tabletId = null;
+    for (var i = 0; i < cookieArray.length; i++) {
+      var cookie = cookieArray[i];
+      if (cookie.indexOf("tabletId=") === 0) {
+        // Encuentra la cookie "tabletId"
+        tabletId = cookie.substring(9);
+        break;
+      }
+    }
+
+    // Comprueba si se encontró la cookie
+    if (tabletId !== null) {
+      // La cookie "tabletId" se encontró y su valor está en la variable "tabletId"
+      console.log("El valor de la cookie tabletId es: " + tabletId);
+    } else {
+      // La cookie "tabletId" no se encontró
+      console.log("La cookie tabletId no se encontró.");
+    }
+
     if (!validarRut(rut)) {
-        $("#message").html("<div class='alert alert-danger' role='alert'>Rut inválido</div>");
+      $("#message").html(
+        "<div class='alert alert-danger' role='alert'>Rut inválido</div>"
+      );
       return false;
     }
     $.ajax({
-        type: "POST",
-        url: "php/validation/login.php",
-        data: $(this).serialize(),
-        success: function (response) {
-            try {
-                var jsonData = JSON.parse(response);
-                if (jsonData.status == true) {
-                    $("#message").html("<div class='alert alert-success' role='alert'>" + jsonData.message + "</div>");
-                    setTimeout(function () {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    $("#message").html("<div class='alert alert-danger' role='alert'>" + jsonData.message + "</div>");
-                }
-            } catch (error) {
-                $("#message").html("<div class='alert alert-danger' role='alert'>" + response + "</div>");
-            }
-        },
-        });
+      type: "POST",
+      url: "php/validation/login.php",
+      data: $(this).serialize() + "&tabletId=" + tabletId,
+      success: function (response) {
+        try {
+          var jsonData = JSON.parse(response);
+          if (jsonData.status == true) {
+            $("#message").html(
+              "<div class='alert alert-success' role='alert'>" +
+                jsonData.message +
+                "</div>"
+            );
+            setTimeout(function () {
+              location.reload();
+            }, 1500);
+          } else {
+            $("#message").html(
+              "<div class='alert alert-danger' role='alert'>" +
+                jsonData.message +
+                "</div>"
+            );
+          }
+        } catch (error) {
+          $("#message").html(
+            "<div class='alert alert-danger' role='alert'>" +
+              response +
+              "</div>"
+          );
+        }
+      },
+    });
   });
 
   $("body").on("click", function () {
@@ -40,8 +80,8 @@ $(document).ready(function () {
 
 //Ejecutar clic en el body para activar el fullscreen
 function crearclickbody() {
-    var body = document.getElementsByTagName("body")[0];
-    body.click();
+  var body = document.getElementsByTagName("body")[0];
+  body.click();
 }
 
 function verificarfullscreen() {

@@ -41,12 +41,12 @@ class Controller{
      private $host = 'localhost';
      public $mi;
  
-     /*Variables BD Local*/
+     /*Variables BD Local
      private $user = 'root';
      private $pass = '';
      private $db = 'gestionescolar';
  
-     /*Variables BD Remota
+     /*Variables BD Remota*/
      private $user = 'colegi38_informatica';
      private $pass = 'informatica2022';
      private $db = 'colegi38_bd';
@@ -137,17 +137,18 @@ class Controller{
     //Crear la session
     public function crearsesion($alumno, $dispositivo, $navegador, $ip){
         $this->conexion();
-        $sql = "insert into sessiones(null, $alumno, now(),'','$dispositivo','$navegador','$ip',1)";
+        $sql = "insert into sessiones values(null, $alumno, now(),'','$dispositivo','$navegador','$ip',1)";
         $result = $this->mi->query($sql);
-        $id = $result->id;
+        //Retornar el id del registro
+        $id = $this->mi->insert_id;
         $this->desconexion();
         return $id;
     }
 
     //Cerrar la session
-    public function cerrarsession($alumno){
+    public function cerrarsession($id){
         $this->conexion();
-        $sql = "update sessiones set salida=now(), estado=2 where id_alu=$alumno and estado=1";
+        $sql = "update sessiones set salida=now(), estado=2 where id=$id and estado=1";
         $result = $this->mi->query($sql);
         $this->desconexion();
         return json_encode($result);
@@ -156,14 +157,14 @@ class Controller{
     //Buscar ultimo registro de session
     public function ultimasession($id_alu){
         $this->conexion();
-        $sql = "select * from sessiones where id_alu=$id_alu and estado=1 order by id desc limit 1";
+        $sql = "select * from sessiones where alumno=$id_alu and estado=1 order by id desc limit 1";
         $result = $this->mi->query($sql);
         if ($rs = mysqli_fetch_array($result)) {
             $id = $rs['id'];
-            $id_alu = $rs['id_alu'];
-            $entrada = $rs['entrada'];
+            $id_alu = $rs['alumno'];
+            $entrada = $rs['ingreso'];
             $salida = $rs['salida'];
-            $dispositivo = $rs['dispositivo'];
+            $dispositivo = $rs['id_dispositivo'];
             $navegador = $rs['navegador'];
             $ip = $rs['ip'];
             $estado = $rs['estado'];
@@ -173,5 +174,49 @@ class Controller{
         }
         $this->desconexion();
         return null;
+    }
+
+    //Buscar registros según el id del dispositivo
+    public function buscarSessionByDispositivo($dispositivo){
+        $this->conexion();
+        $sql = "select sessiones.id as id, alumnos.nombres as nombre, alumnos.ape_paterno as paterno, alumnos.ape_materno as materno, sessiones.ingreso as ingreso, sessiones.salida as salida, sessiones.id_dispositivo as dispositivo, sessiones.navegador as navegador, sessiones.ip as ip, sessiones.estado as estado from sessiones, alumnos where sessiones.alumno=alumnos.id_alu and sessiones.id_dispositivo='$dispositivo' order by sessiones.id desc limit 20";
+        $result = $this->mi->query($sql);
+        $lista = array();
+        while ($rs = mysqli_fetch_array($result)) {
+            $id = $rs['id'];
+            $id_alu = $rs['nombre'] . ' ' . $rs['paterno'] . ' ' . $rs['materno'];
+            $entrada = $rs['ingreso'];
+            $salida = $rs['salida'];
+            $dispositivo = $rs['dispositivo'];
+            $navegador = $rs['navegador'];
+            $ip = $rs['ip'];
+            $estado = $rs['estado'];
+            $ses = new Session($id, $id_alu, $entrada, $salida, $dispositivo, $navegador, $ip, $estado);
+            $lista[] = $ses;
+        }
+        $this->desconexion();
+        return $lista;
+    }
+
+    //Buscar registros según el id del alumno
+    public function buscarSessionByAlumno($alumno){
+        $this->conexion();
+        $sql = "select sessiones.id as id, alumnos.nombres as nombre, alumnos.ape_paterno as paterno, alumnos.ape_materno as materno, sessiones.ingreso as ingreso, sessiones.salida as salida, sessiones.id_dispositivo as dispositivo, sessiones.navegador as navegador, sessiones.ip as ip, sessiones.estado as estado from sessiones, alumnos where sessiones.alumno=alumnos.id_alu and sessiones.alumno=$alumno order by sessiones.id desc limit 5";
+        $result = $this->mi->query($sql);
+        $lista = array();
+        while ($rs = mysqli_fetch_array($result)) {
+            $id = $rs['id'];
+            $id_alu = $rs['nombre'] . ' ' . $rs['paterno'] . ' ' . $rs['materno'];
+            $entrada = $rs['ingreso'];
+            $salida = $rs['salida'];
+            $dispositivo = $rs['dispositivo'];
+            $navegador = $rs['navegador'];
+            $ip = $rs['ip'];
+            $estado = $rs['estado'];
+            $ses = new Session($id, $id_alu, $entrada, $salida, $dispositivo, $navegador, $ip, $estado);
+            $lista[] = $ses;
+        }
+        $this->desconexion();
+        return $lista;
     }
 }

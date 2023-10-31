@@ -1,15 +1,7 @@
 <?php
 require 'php/controller.php';
-session_start();
 $c = new Controller();
-$estudiante = null;
-$sesion = null;
-if (isset($_SESSION['STUDENT_IDENTITY'])) {
-    $id = $_SESSION['STUDENT_IDENTITY'];
-    $ano = date('Y');
-    $estudiante = $c->buscarEstudianteById($id, $ano);
-    $sesion = $c->ultimasession($id);
-}
+session_start();
 ?>
 <!doctype html>
 <html lang="es">
@@ -17,7 +9,7 @@ if (isset($_SESSION['STUDENT_IDENTITY'])) {
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>CG Lab - Ingreso </title>
+    <title>CG Lab - Reporte </title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.ico">
@@ -68,47 +60,15 @@ if (isset($_SESSION['STUDENT_IDENTITY'])) {
                     <div class="container">
                         <div class="slider-wrapper">
                             <div class="row align-items-center">
-                                <div class="col-xxl-6 col-xl-6 col-lg-6 <?php if ($estudiante != null) {
-                                    echo "d-none";
-                                } ?>">
-                                    <div class="mb-55 mb-lg-0 slider-content-space-2">
-                                        <span class="hero-subtitle-2 wow fadeInUp" data-wow-delay=".2s">Bienvenid@
-                                            a</span>
-                                        <h3 class="hero-title-2 wow fadeInUp" data-wow-delay=".4s">CG LAB</h3>
-                                        <div id="message"></div>
-                                        <div class="hero-form-2 mb-12 wow fadeInUp" data-wow-delay=".8s">
-                                            <form id="formlogin">
-                                                <input type="text" placeholder="Ingrese su RUN" name='rut' id="rut"
-                                                    onkeyup="formatRut(this)" maxlength="12" required>
-                                                <button type="submit" class="rectangle-btn-2">Ingresar</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php if ($estudiante != null) { ?>
-                                    <div class="col-xxl-8 col-xl-8 col-lg-8">
-                                        <div class="mb-55 mb-lg-0 slider-content-space-2">
-                                            <h3 class="hero-title-2 wow fadeInUp" data-wow-delay=".4s">Hola,
-                                                <?php echo $estudiante->getNombre() . " " . $estudiante->getApellido_parterno(); ?>
-                                                <p>
-                                                    Tu Direccion IP es:
-                                                    <?php echo $sesion->getIp(); ?><br>
-                                                    <?php
-                                                    echo "Tu Navegador es: " . $sesion->getNavegador() . "<br>";
-                                                    echo "ID Dispositivo: " . $sesion->getIdDispositivo() . "<br>";
-                                                    echo "Ingreso: " . date("d-m-Y H:i:s", strtotime($sesion->getIngreso())) . "<br>";
-                                                    ?>
-
-                                                </p>
-                                                <a href="close.php" class="btn btn-danger">Cerrar Sesion</a>
-                                        </div>
-                                        <h3>Historial</h3>
-                                        <table class="table">
+                                <div class="col-xxl-12 col-xl-12 col-lg-12">
+                                    <table class="table">
                                         <thead>
                                             <tr>
+                                                <th>ID</th>
+                                                <th>Estudiante</th>
                                                 <th>Ingreso</th>
                                                 <th>Cierre</th>
-                                                <th>Dispositivo</th>
+                                                <th>Navegador</th>
                                                 <th>IP</th>
                                                 <th>Estado</th>
                                             </tr>
@@ -118,16 +78,18 @@ if (isset($_SESSION['STUDENT_IDENTITY'])) {
                                             $cookieName = 'tabletId';
                                             if (isset($_COOKIE[$cookieName])) {
                                                 $tabletId = $_COOKIE[$cookieName];
-                                                $sesiones = $c->buscarSessionByAlumno($estudiante->getId());
+                                                $sesiones = $c->buscarSessionByDispositivo($tabletId);
                                                 foreach ($sesiones as $sesion) {
                                                     echo '<tr>';
+                                                    echo '<td>' . $sesion->getId() . '</td>';
+                                                    echo '<td>' . $sesion->getAlumno() . '</td>';
                                                     echo '<td>' . date("d-m-Y H:i:s", strtotime($sesion->getIngreso())) . '</td>';
                                                     if($sesion->getSalida() == null || $sesion->getSalida() == '0000-00-00 00:00:00'){
                                                         echo '<td>Sesión Activa</td>';
                                                     }else{
                                                     echo '<td>' . date("d-m-Y H:i:s", strtotime($sesion->getSalida())) . '</td>';
                                                     }
-                                                    echo '<td>' . $sesion->getIdDispositivo() . '</td>';
+                                                    echo '<td>' . $sesion->getNavegador() . '</td>';
                                                     echo '<td>' . $sesion->getIp() . '</td>';
                                                     if ($sesion->getEstado() == 1) {
                                                         echo '<td>Activo</td>';
@@ -140,9 +102,8 @@ if (isset($_SESSION['STUDENT_IDENTITY'])) {
                                             ?>
                                         </tbody>
                                     </table>
-                                    </div>
-                                <?php } ?>
-                                <div class="col-xxl-4 col-xl-4 col-lg-4">
+                                </div>
+                                <div class="col-xxl-6 col-xl-6 col-lg-6">
                                     <!-- slider svg image start -->
                                     <svg id="Object" class="non-fix object-width" xmlns="http://www.w3.org/2000/svg"
                                         xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 539.55 477.63">
@@ -645,6 +606,7 @@ if (isset($_SESSION['STUDENT_IDENTITY'])) {
         </svg>
     </div>
     <!-- back to top end -->
+
     <!-- JS here -->
     <script src="assets/js/jquery.min.js"></script>
     <script src="assets/js/bootstrap.bundle.min.js"></script>
@@ -664,39 +626,6 @@ if (isset($_SESSION['STUDENT_IDENTITY'])) {
     <script src="assets/js/back-to-top.min.js"></script>
     <script src="assets/js/main.js"></script>
     <script src="js/validation.js"></script>
-    <script src="js/index.js"></script>
-    <script>
-        <?php
-        $tabletId = md5(uniqid(rand(), true));
-        ?>
-        var valor = "<?php echo $tabletId; ?>";
-        if (navigator.cookieEnabled) {
-            // Verifica si la cookie deseada ya existe
-            if (document.cookie.indexOf("tabletId=") === -1) {
-                // La cookie no existe, solicita el permiso
-                if (confirm("Este sitio web utiliza cookies para mejorar la experiencia del usuario. ¿Aceptas el uso de cookies?")) {
-                    // El usuario ha dado su consentimiento
-                    // Configura la cookie aquí
-                    document.cookie = "tabletId="+valor+"; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/";
-                } else {
-                    // El usuario no dio su consentimiento, puedes tomar medidas apropiadas
-                }
-            }else{
-                // La cookie existe, no es necesario solicitar permiso
-                $tableid = document.cookie.valueOf("tabletId");
-            }
-        } else {
-            // El navegador no admite cookies, toma medidas apropiadas
-            //Solictar permiso para guardar cookies
-            if (confirm("Este sitio web utiliza cookies para mejorar la experiencia del usuario. ¿Aceptas el uso de cookies?")) {
-                // El usuario ha dado su consentimiento
-                // Configura la cookie aquí
-                document.cookie = "tabletId="+valor+"; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/";
-            } else {
-                // El usuario no dio su consentimiento, puedes tomar medidas apropiadas
-            }
-        }
-    </script>
 </body>
 
 </html>

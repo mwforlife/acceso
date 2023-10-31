@@ -4,6 +4,7 @@ require 'php/controller.php';
 $c = new Controller();
 
 $id = $_SESSION['STUDENT_IDENTITY'];
-$c = $c->cerrarsession($id);
+$sesion = $c->ultimasession($id);
+$c = $c->cerrarsession($sesion->getId());
 session_unset();
-header('../acceso');
+header('Location: ../acceso');

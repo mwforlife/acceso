@@ -39,7 +39,7 @@ class Session{
     public function getIp(){
         return $this->ip;
     }
-    public function getestado(){
+    public function getEstado(){
         return $this->estado;
     }
 }
